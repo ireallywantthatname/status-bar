@@ -1,0 +1,54 @@
+window.Bar {
+  background-color: transparent;
+  font-family: "Noto Sans";
+  min-width: 0;
+  min-height: 0;
+
+  .Panel {
+    background-color: #000000;
+    border: 1px solid #FFFFFF;
+    color: #FFFFFF;
+    font-weight: 600;
+    padding: 12px 8px;
+  }
+
+  label {
+    color: #FFFFFF;
+  }
+
+  button {
+    background: #000000;
+    background-color: #000000;
+    background-image: none;
+    color: #FFFFFF;
+    border: none;
+    box-shadow: none;
+    outline: none;
+    border-radius: 0;
+    min-height: 28px;
+    min-width: 0;
+    padding: 4px 8px;
+
+    label {
+      color: #FFFFFF;
+    }
+
+    &:hover,
+    &:focus,
+    &:focus-visible,
+    &:active,
+    &:checked,
+    &.current {
+      background: #FFFFFF;
+      background-color: #FFFFFF;
+      background-image: none;
+      color: #000000;
+      box-shadow: none;
+      outline: none;
+
+      label {
+        color: #000000;
+      }
+    }
+  }
+}
