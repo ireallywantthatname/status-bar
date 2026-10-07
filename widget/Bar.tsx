@@ -1,6 +1,6 @@
 import app from "ags/gtk4/app"
 import { Astal, Gtk, Gdk } from "ags/gtk4"
-import { Accessor, createBinding, For } from "ags"
+import { Accessor, createBinding, For, onCleanup } from "ags"
 import { execAsync } from "ags/process"
 import { createPoll } from "ags/time"
 import Hyprland from "gi://AstalHyprland"
@@ -48,11 +48,12 @@ function RotatedLabel({
       class={className}
       hexpand={false}
       vexpand={false}
+      halign={Gtk.Align.CENTER}
       $={(self) => {
         function sync() {
           const layout = self.create_pango_layout(getText())
           const [w, h] = layout.get_pixel_size()
-          self.set_content_width(h)
+          self.set_content_width(h + 4)
           self.set_content_height(w)
           self.queue_draw()
         }
@@ -62,14 +63,15 @@ function RotatedLabel({
 
         if (typeof label !== "string") {
           const unsub = label.subscribe(sync)
-          self.connect("unrealize", unsub)
+          onCleanup(unsub)
         }
 
-        self.set_draw_func((_area, cr, width) => {
+        self.set_draw_func((_area, cr, width, height) => {
           const layout = self.create_pango_layout(getText())
+          const [w, h] = layout.get_pixel_size()
           const color = self.get_color()
           cr.setSourceRGBA(color.red, color.green, color.blue, color.alpha)
-          cr.translate(width, 0)
+          cr.translate((width + h) / 2 + 1.5, Math.max(0, (height - w) / 2))
           cr.rotate(Math.PI / 2)
           PangoCairo.show_layout(cr, layout)
         })
@@ -82,22 +84,34 @@ function Workspaces() {
   const hypr = Hyprland.get_default()
 
   if (!hypr) {
-    return <box class="Workspaces" orientation={Gtk.Orientation.VERTICAL} />
+    return (
+      <box
+        class="Workspaces"
+        orientation={Gtk.Orientation.VERTICAL}
+        halign={Gtk.Align.CENTER}
+      />
+    )
   }
 
-  const workspaces = createBinding(hypr, "workspaces")((list) =>
-    list.filter((ws) => ws.id > 0).sort((a, b) => a.id - b.id),
-  )
+  const workspaces = createBinding(
+    hypr,
+    "workspaces",
+  )((list) => list.filter((ws) => ws.id > 0).sort((a, b) => a.id - b.id))
   const focusedId = createBinding(hypr, "focusedWorkspace", "id")
 
   return (
-    <box class="Workspaces" orientation={Gtk.Orientation.VERTICAL}>
+    <box
+      class="Workspaces"
+      orientation={Gtk.Orientation.VERTICAL}
+      halign={Gtk.Align.CENTER}
+    >
       <For each={workspaces} id={(ws) => ws.id}>
         {(ws) => (
           <button
             class={focusedId((id) => (id === ws.id ? "current" : ""))}
             canFocus={false}
             focusOnClick={false}
+            halign={Gtk.Align.CENTER}
             onClicked={() =>
               execAsync([
                 "hyprctl",
@@ -119,7 +133,12 @@ function Clock() {
   const time = createPoll(formatTime(), 1000, formatTime)
 
   return (
-    <box class="Clock" orientation={Gtk.Orientation.VERTICAL} spacing={8}>
+    <box
+      class="Clock"
+      orientation={Gtk.Orientation.VERTICAL}
+      spacing={8}
+      halign={Gtk.Align.CENTER}
+    >
       <RotatedLabel class="Date" label={date} />
       <RotatedLabel class="Time" label={time} />
     </box>
@@ -145,11 +164,21 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
         orientation={Gtk.Orientation.VERTICAL}
         cssName="centerbox"
       >
-        <box $type="start" class="Start">
+        <box
+          $type="start"
+          class="Start"
+          orientation={Gtk.Orientation.VERTICAL}
+          halign={Gtk.Align.CENTER}
+        >
           <Workspaces />
         </box>
         <box $type="center" vexpand />
-        <box $type="end" class="End" orientation={Gtk.Orientation.VERTICAL}>
+        <box
+          $type="end"
+          class="End"
+          orientation={Gtk.Orientation.VERTICAL}
+          halign={Gtk.Align.CENTER}
+        >
           <Clock />
         </box>
       </centerbox>
